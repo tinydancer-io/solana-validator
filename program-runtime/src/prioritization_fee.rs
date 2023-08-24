@@ -25,7 +25,7 @@ impl PrioritizationFeeDetails {
                 } else {
                     let micro_lamport_fee: MicroLamports =
                         (fee as u128).saturating_mul(MICRO_LAMPORTS_PER_LAMPORT as u128);
-                    let priority = micro_lamport_fee.saturating_div(compute_unit_limit as u128);
+                    let priority = micro_lamport_fee.checked_div(compute_unit_limit as u128).unwrap();
                     u64::try_from(priority).unwrap_or(u64::MAX)
                 };
 
@@ -37,7 +37,7 @@ impl PrioritizationFeeDetails {
                         (cu_price as u128).saturating_mul(compute_unit_limit as u128);
                     let fee = micro_lamport_fee
                         .saturating_add(MICRO_LAMPORTS_PER_LAMPORT.saturating_sub(1) as u128)
-                        .saturating_div(MICRO_LAMPORTS_PER_LAMPORT as u128);
+                        .checked_div(MICRO_LAMPORTS_PER_LAMPORT as u128).unwrap();
                     u64::try_from(fee).unwrap_or(u64::MAX)
                 };
 

@@ -348,7 +348,7 @@ fn translate_type_inner<'a, T>(
 ) -> Result<&'a mut T, Error> {
     let host_addr = translate(memory_mapping, access_type, vm_addr, size_of::<T>() as u64)?;
 
-    if check_aligned && (host_addr as *mut T as usize).wrapping_rem(align_of::<T>()) != 0 {
+    if check_aligned && (host_addr as *mut T as usize).checked_rem(align_of::<T>()).unwrap() != 0 {
         return Err(SyscallError::UnalignedPointer.into());
     }
     Ok(unsafe { &mut *(host_addr as *mut T) })
@@ -388,7 +388,7 @@ fn translate_slice_inner<'a, T>(
 
     let host_addr = translate(memory_mapping, access_type, vm_addr, total_size)?;
 
-    if check_aligned && (host_addr as *mut T as usize).wrapping_rem(align_of::<T>()) != 0 {
+    if check_aligned && (host_addr as *mut T as usize).checked_rem(align_of::<T>()).unwrap() != 0 {
         return Err(SyscallError::UnalignedPointer.into());
     }
     Ok(unsafe { from_raw_parts_mut(host_addr as *mut T, len as usize) })
@@ -763,7 +763,7 @@ declare_syscall!(
                 let cost = compute_budget.mem_op_base_cost.max(
                     compute_budget
                         .sha256_byte_cost
-                        .saturating_mul((val.len() as u64).saturating_div(2)),
+                        .saturating_mul((val.len() as u64).checked_div(2).unwrap()),
                 );
                 consume_compute_meter(invoke_context, cost)?;
                 hasher.hash(bytes);
@@ -826,7 +826,7 @@ declare_syscall!(
                 let cost = compute_budget.mem_op_base_cost.max(
                     compute_budget
                         .sha256_byte_cost
-                        .saturating_mul((val.len() as u64).saturating_div(2)),
+                        .saturating_mul((val.len() as u64).checked_div(2).unwrap()),
                 );
                 consume_compute_meter(invoke_context, cost)?;
                 hasher.hash(bytes);
@@ -1323,7 +1323,7 @@ declare_syscall!(
                 let cost = compute_budget.mem_op_base_cost.max(
                     compute_budget
                         .sha256_byte_cost
-                        .saturating_mul((val.len() as u64).saturating_div(2)),
+                        .saturating_mul((val.len() as u64).checked_div(2).unwrap()),
                 );
                 consume_compute_meter(invoke_context, cost)?;
                 hasher.hash(bytes);
@@ -1349,7 +1349,7 @@ declare_syscall!(
         let budget = invoke_context.get_compute_budget();
 
         let cost = len
-            .saturating_div(budget.cpi_bytes_per_unit)
+            .checked_div(budget.cpi_bytes_per_unit).unwrap()
             .saturating_add(budget.syscall_base_cost);
         consume_compute_meter(invoke_context, cost)?;
 
@@ -1403,7 +1403,7 @@ declare_syscall!(
         if length != 0 {
             let cost = length
                 .saturating_add(size_of::<Pubkey>() as u64)
-                .saturating_div(budget.cpi_bytes_per_unit);
+                .checked_div(budget.cpi_bytes_per_unit).unwrap();
             consume_compute_meter(invoke_context, cost)?;
 
             let return_data_result = translate_slice_mut::<u8>(
@@ -1636,7 +1636,7 @@ declare_syscall!(
                 ALT_BN128_MULTIPLICATION_OUTPUT_LEN,
             ),
             ALT_BN128_PAIRING => {
-                let ele_len = input_size.saturating_div(ALT_BN128_PAIRING_ELEMENT_LEN as u64);
+                let ele_len = input_size.checked_div(ALT_BN128_PAIRING_ELEMENT_LEN as u64).unwrap();
                 let cost = budget
                     .alt_bn128_pairing_one_pair_cost_first
                     .saturating_add(
@@ -1732,7 +1732,7 @@ declare_syscall!(
             budget.syscall_base_cost.saturating_add(
                 input_len
                     .saturating_mul(input_len)
-                    .saturating_div(budget.big_modular_exponentiation_cost),
+                    .checked_div(budget.big_modular_exponentiation_cost).unwrap(),
             ),
         )?;
 
@@ -2406,7 +2406,7 @@ mod tests {
             let address = result.unwrap();
             assert_ne!(address, 0);
             assert_eq!(
-                (address as *const u8 as usize).wrapping_rem(align_of::<T>()),
+                (address as *const u8 as usize).checked_rem(align_of::<T>()).unwrap(),
                 0
             );
         }

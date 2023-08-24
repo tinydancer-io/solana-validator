@@ -82,7 +82,7 @@ impl<'a> CallerAccount<'a> {
             consume_compute_meter(
                 invoke_context,
                 (data.len() as u64)
-                    .saturating_div(invoke_context.get_compute_budget().cpi_bytes_per_unit),
+                    .checked_div(invoke_context.get_compute_budget().cpi_bytes_per_unit).unwrap(),
             )?;
 
             let translated = translate(
@@ -181,7 +181,7 @@ impl<'a> CallerAccount<'a> {
             invoke_context,
             account_info
                 .data_len
-                .saturating_div(invoke_context.get_compute_budget().cpi_bytes_per_unit),
+                .checked_div(invoke_context.get_compute_budget().cpi_bytes_per_unit).unwrap(),
         )?;
 
         let bpf_account_data_direct_mapping = invoke_context
@@ -333,7 +333,7 @@ impl SyscallInvokeSigned for SyscallInvokeSignedRust {
             consume_compute_meter(
                 invoke_context,
                 (ix_data_len)
-                    .saturating_div(invoke_context.get_compute_budget().cpi_bytes_per_unit),
+                    .checked_div(invoke_context.get_compute_budget().cpi_bytes_per_unit).unwrap(),
             )?;
         }
 
@@ -551,7 +551,7 @@ impl SyscallInvokeSigned for SyscallInvokeSignedC {
             consume_compute_meter(
                 invoke_context,
                 (ix_data_len)
-                    .saturating_div(invoke_context.get_compute_budget().cpi_bytes_per_unit),
+                    .checked_div(invoke_context.get_compute_budget().cpi_bytes_per_unit).unwrap(),
             )?;
         }
 
@@ -756,7 +756,7 @@ where
             consume_compute_meter(
                 invoke_context,
                 (callee_account.get_data().len() as u64)
-                    .saturating_div(invoke_context.get_compute_budget().cpi_bytes_per_unit),
+                    .checked_div(invoke_context.get_compute_budget().cpi_bytes_per_unit).unwrap(),
             )?;
 
             accounts.push((instruction_account.index_in_caller, None));

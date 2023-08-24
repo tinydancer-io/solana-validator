@@ -9,7 +9,7 @@ fn mem_op_consume(invoke_context: &mut InvokeContext, n: u64) -> Result<(), Erro
     let compute_budget = invoke_context.get_compute_budget();
     let cost = compute_budget
         .mem_op_base_cost
-        .max(n.saturating_div(compute_budget.cpi_bytes_per_unit));
+        .max(n.checked_div(compute_budget.cpi_bytes_per_unit).unwrap());
     consume_compute_meter(invoke_context, cost)
 }
 
